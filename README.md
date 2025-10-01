@@ -1,4 +1,4 @@
-# read4me.
+# read4me
 
 A tiny macOS utility that lets you **select any text**, hit a hotkey, and hear it read out loud. Great for long emails, docs, or web articles when your eyes need a break.
 
