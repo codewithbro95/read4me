@@ -26,7 +26,7 @@ I don’t enjoy reading long text on my computer. It slows me down and I lose fo
 
 ### Option A: Download the app (recommended)
 
-From the GitHub **Releases** page, download `read4me.app` (or `.dmg`: coming later), move it to **Applications**, and open it.
+From the GitHub [Releases](https://github.com/codewithbro95/read4me/releases/tag/beta) page, download `read4me.app` (or `.dmg`: coming later), move it to **Applications**, and open it.
 
 On first launch, macOS will prompt you for permissions (see **Permissions** below). After enabling, quit and relaunch if macOS asks you to.
 
