@@ -55,6 +55,26 @@ speaker = TextSpeaker(rate_wpm=190, voice=None)  # e.g. voice="Samantha" or "Ale
 reader = SelectionReader(copy_delay_sec=0.30)    # bump to 0.40–0.50 if an app is slow
 ```
 
+## Run your own build
+
+You can build yourself. You might need to install these or update them first:
+
+```python
+pip install --upgrade pip wheel setuptools
+pip install py2app pyobjc rumps pynput pyperclip
+```
+
+```python
+# Fast dev run (alias build keeps your code outside the bundle)
+python setup.py py2app -A
+open dist/read4me.app
+
+# Release build (self-contained app bundle)
+rm -rf build dist
+python setup.py py2app
+open dist/read4me.app
+```
+
 * `rate_wpm`: speaking speed
 * `voice`: choose a macOS voice
 * `copy_delay_sec`: wait time for apps to update the clipboard

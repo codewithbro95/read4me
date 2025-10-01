@@ -1,3 +1,8 @@
 kokoro-onnx
 pynput
 pyperclip
+wheel
+setuptools
+py2app
+pyobjc
+rumps

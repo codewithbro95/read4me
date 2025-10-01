@@ -37,6 +37,15 @@ import rumps
 from pynput import keyboard
 from pynput.keyboard import Key, Controller
 
+# macOS Accessibility (pyobjc)
+try:
+    from Quartz import AXIsProcessTrustedWithOptions, kAXTrustedCheckOptionPrompt
+    from Cocoa import NSDictionary
+except Exception:
+    AXIsProcessTrustedWithOptions = None
+    kAXTrustedCheckOptionPrompt = None
+    NSDictionary = None
+
 # ---- Config ----
 DEFAULT_RATE_WPM: int = 190
 DEFAULT_VOICE: Optional[str] = None  # e.g., "Samantha", "Alex"
@@ -44,6 +53,22 @@ COPY_DELAY_SEC: float = 0.30
 DOCS_URL: str = "https://github.com/codewithbro95/read4me"  # Update to your repo
 APP_TITLE_ENABLED = "🗣️ r4me"
 APP_TITLE_DISABLED = "r4me"
+
+
+def is_accessibility_trusted(prompt: bool = False) -> bool:
+    """Return True if the app has macOS Accessibility permission. If prompt=True, show the system prompt."""
+    try:
+        if AXIsProcessTrustedWithOptions is None:
+            # Best-effort fallback when Quartz symbols aren't available in this environment
+            return True
+        if prompt:
+            opts = NSDictionary.dictionaryWithDictionary_({kAXTrustedCheckOptionPrompt: True})
+        else:
+            opts = None
+        return bool(AXIsProcessTrustedWithOptions(opts))
+    except Exception:
+        # If we cannot check, assume True to avoid blocking; copy attempt will still fail gracefully
+        return True
 
 
 class TextSpeaker:
@@ -215,15 +240,21 @@ class Read4MeMenuApp(rumps.App):
         self.debounce = HotkeyDebouncer(0.5)
         self.hotkeys = HotkeyService(self._speak_selection, self._stop_speaking, self.debounce)
 
-        # Menu items
+        self.perms_item = rumps.MenuItem("Grant Accessibility Permission", callback=self._request_accessibility)
+
         self.enable_item = rumps.MenuItem("Enable hotkeys", callback=self._toggle_hotkeys)
         self.docs_item = rumps.MenuItem("Documentation / How to use", callback=self._open_docs)
 
         self.menu = [
             self.enable_item,
+            self.perms_item,
             None,
             self.docs_item,
         ]
+
+        # Prompt for Accessibility on first launch if not already granted
+        if not is_accessibility_trusted(prompt=True):
+            rumps.notification("read4me", "Permission needed", "Enable Accessibility for read4me to send Cmd+C")
 
         # Start enabled by default for continuity with the CLI version
         self.enabled = True
@@ -233,9 +264,17 @@ class Read4MeMenuApp(rumps.App):
 
     # ---- Actions ----
     def _speak_selection(self, *_):
+        if not is_accessibility_trusted(prompt=False):
+            rumps.notification(
+                "read4me",
+                "Accessibility required",
+                "Enable in Settings → Privacy & Security → Accessibility (then try again)"
+            )
+            return
+
         text = self.reader.copy_selection_to_clipboard()
         if not text.strip():
-            rumps.notification("read4me", "Nothing selected", "Select text and press Cmd+Shift+S")
+            rumps.notification("read4me", "No text captured", "Select text and try again. If it repeats, enable Accessibility for read4me.")
             return
         self.speaker.speak(text)
 
@@ -258,6 +297,14 @@ class Read4MeMenuApp(rumps.App):
             webbrowser.open(DOCS_URL)
         except Exception as e:
             print(f"[error] Could not open docs: {e}")
+
+    def _request_accessibility(self, *_):
+        # Trigger system prompt (if available) and open the settings pane
+        is_accessibility_trusted(prompt=True)
+        try:
+            subprocess.run(["open", "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"], check=False)
+        except Exception:
+            pass
 
 
 def main() -> None:
