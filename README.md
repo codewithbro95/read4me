@@ -1,4 +1,4 @@
-# read4me
+# read4me: A tiny macOS utility for “select & speak”
 
 A tiny macOS utility that lets you **select any text**, hit a hotkey, and hear it read out loud. Great for long emails, docs, or web articles when your eyes need a break.
 
@@ -8,102 +8,95 @@ I don’t enjoy reading long text on my computer. It slows me down and I lose fo
 
 ## What it does
 
-* Works **anywhere on macOS** with selected text
-* **Hotkey to speak** the current selection
-* **Hotkey to stop** speaking
-* Uses macOS built-in TTS (`say`) so it’s fast and offline
-* Restores your clipboard after speaking
+- **System‑wide**: Works anywhere on macOS with selected text
+- **Menu bar app**: Enable/disable hotkeys and open documentation from the menu bar
+- **Hotkeys**: Speak selection (Cmd+Shift+S) and Stop (Cmd+Shift+X)
+- **Offline TTS**: Uses macOS `say` (fast, built‑in)
+- **Clipboard‑friendly**: Temporarily copies selection and restores your clipboard
+- **Single‑file MVP**: Simple codebase, easy to hack
 
 ## Requirements
 
-* macOS
-* Python 3.10+
-* `pynput` and `pyperclip` Python packages
-* Accessibility permission for your terminal or IDE
+- macOS (Apple Silicon or Intel): Tested on macOS 26.0.1
+- Python 3.10+
+- Python packages: `rumps`, `pynput`, `pyperclip`, `pyobjc`
+- Permissions: **Accessibility** and **Input Monitoring** (details below)
 
 ## Install
 
-```bash
-git clone <your-repo-url>
-cd read4me
-pip install pynput pyperclip
-```
+### Option A: Download the app (recommended)
 
-## Run
+From the GitHub **Releases** page, download `read4me.app` (or `.dmg`: coming later), move it to **Applications**, and open it.
+
+On first launch, macOS will prompt you for permissions (see **Permissions** below). After enabling, quit and relaunch if macOS asks you to.
+
+### Option B: Run from source (developer mode)
 
 ```bash
+pip install --upgrade pip wheel setuptools
+pip install rumps pynput pyperclip pyobjc
+
 python speak_selection.py
 ```
 
-On first run, macOS will likely ask you to allow Accessibility access:
+> First run from Terminal will ask for **Accessibility** (to send Cmd+C) and may ask for **Input Monitoring** (to listen for global hotkeys).
 
-**System Settings → Privacy & Security → Accessibility → enable** your terminal or IDE.
+---
 
-## Hotkeys
+## Usage
 
-* **Cmd + Shift + S** → Copy current selection and speak it
-* **Cmd + Shift + X** → Stop speaking
+- Select any text in any app.
+- Press **Cmd + Shift + S** to hear it.
+- Press **Cmd + Shift + X** to stop.
 
-Select any text in any app, press **Cmd + Shift + S**, and it will read just that selection.
+There’s a menu bar item called **r4me** where you can toggle hotkeys and open the documentation.
+
+---
+
+## Permissions (macOS)
+
+read4me needs two macOS privacy permissions to work everywhere:
+
+1. **Accessibility:** lets read4me send **Cmd+C** to copy your selection from the foreground app.
+2. **Input Monitoring:** lets read4me listen for your global hotkeys.
 
 ## Configuration
 
-Open `speak_selection.py` and adjust:
+Open `speak_selection.py` and tweak:
 
 ```python
-speaker = TextSpeaker(rate_wpm=190, voice=None)  # e.g. voice="Samantha" or "Alex"
+speaker = TextSpeaker(rate_wpm=190, voice=None)  # e.g., "Samantha" or "Alex"
 reader = SelectionReader(copy_delay_sec=0.30)    # bump to 0.40–0.50 if an app is slow
 ```
 
-## Run your own build
-
-You can build yourself. You might need to install these or update them first:
-
-```python
-pip install --upgrade pip wheel setuptools
-pip install py2app pyobjc rumps pynput pyperclip
-```
-
-```python
-# Fast dev run (alias build keeps your code outside the bundle)
-python setup.py py2app -A
-open dist/read4me.app
-
-# Release build (self-contained app bundle)
-rm -rf build dist
-python setup.py py2app
-open dist/read4me.app
-```
-
-* `rate_wpm`: speaking speed
-* `voice`: choose a macOS voice
-* `copy_delay_sec`: wait time for apps to update the clipboard
+- `rate_wpm`: speaking speed
+- `voice`: choose a macOS voice
+- `copy_delay_sec`: extra time for slower apps to update the clipboard
 
 ## How it works
 
-* Temporarily clears the clipboard
-* Sends Cmd+C to copy your current selection
-* Waits a short moment for the app to place text on the clipboard
-* Reads that fresh text through `say`
-* Restores your original clipboard
+- Clears the clipboard (temporarily)
+- Sends **Cmd+C** to copy your current selection
+- Waits briefly for the app to write to the clipboard
+- Streams that text to macOS `say`
+- Restores your original clipboard
 
 ## Troubleshooting
 
-* **Nothing is spoken**: Make sure you actually have text selected, and that Accessibility is enabled for your terminal/IDE. Try increasing `copy_delay_sec`.
-* **Reads the wrong thing**: Some apps are slower to update the clipboard. Increase `copy_delay_sec` to 0.40–0.50.
-* **Hotkey doesn’t trigger**: Another tool may be using the same shortcut. Change the combo in the `GlobalHotKeys` map.
+- **No speech**: Ensure both **Accessibility** and **Input Monitoring** are enabled for read4me. Also verify that text is actually selected.
+- **Reads the wrong thing**: Some apps are slower. Increase `copy_delay_sec` to `0.40–0.50`.
+- **Hotkey doesn’t trigger**: Shortcut clash. Change the combo in the global hotkey map in `speak_selection.py`.
 
 ## Roadmap
 
-* Menu bar toggle and status
-* Quick voice switcher
-* Pause and resume
-* Optional on-screen toast when nothing is selected
-* Cross-platform TTS (e.g., `pyttsx3`) while keeping macOS quality where available
+- Pause/Resume
+- Quick voice switcher
+- Menu bar icon + preferences
+- Cross‑platform TTS (while keeping high quality on macOS)
 
 ## Contributing
 
-PRs and issues are welcome. Keep it simple and readable. This project aims to stay a small utility.
+PRs and issues are welcome. Keep it small, focused, and readable.
 
 ## License
 
